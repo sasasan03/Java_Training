@@ -15,16 +15,14 @@ public class Student {
 		String user = "student";
 		String password = "password";
 
-		String updateSql = "UPDATE student SET name = ?, age = ? WHERE id = ?";
+		String deleteSql = "DELETE FROM student WHERE id = ?";
 
 		try (Connection conn = DriverManager.getConnection(url, user, password);
-				PreparedStatement ps = conn.prepareStatement(updateSql);) {
-			ps.setString(1, "谷本");
-			ps.setInt(2, 29);
-			ps.setInt(3, 100);
+				PreparedStatement ps = conn.prepareStatement(deleteSql);) {
+			ps.setInt(1, 3);
 			int count = ps.executeUpdate();
 			if (count != 0) {
-				System.out.println("作成カウント：" + count);
+				System.out.println("削除件数：" + count);
 			} else {
 				System.out.println("該当なし");
 			}
