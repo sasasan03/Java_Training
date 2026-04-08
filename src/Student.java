@@ -15,15 +15,19 @@ public class Student {
 		String user = "student";
 		String password = "password";
 	
-		String selectSql = "SELECT * FROM student";
+		String selectIdSql = "SELECT * FROM student WHERE id = ?";
 		
-		try(Connection conn = DriverManager.getConnection(url,user,password)) {
-		    PreparedStatement ps = conn.prepareStatement(selectSql);
-		    ResultSet rs = ps.executeQuery();
-			while (rs.next()) {
-				System.out.println(rs.getInt("id"));
-				System.out.println(rs.getString("name"));
-				System.out.println(rs.getInt("age"));
+		try(
+				Connection conn = DriverManager.getConnection(url,user,password);
+				PreparedStatement ps = conn.prepareStatement(selectIdSql);
+			) {
+			ps.setInt(1, 100);
+			try(ResultSet rs = ps.executeQuery();) {
+				if (rs.next()) {
+						System.out.println(rs.getString("name"));
+				} else {
+					System.out.println("該当なし");
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
