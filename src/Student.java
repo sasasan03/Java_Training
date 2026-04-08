@@ -1,8 +1,12 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+
+// 一斉リネーム: com + opt + R
+// 最後尾へ移動： com 矢印
+// 行を複製： com + opt ＋ 下
 
 public class Student {
 
@@ -10,16 +14,17 @@ public class Student {
 		String url = "jdbc:postgresql://localhost:5432/training";
 		String user = "student";
 		String password = "password";
-		Connection conn;
-		Statement statement;
+	
+		String selectSql = "SELECT * FROM student";
 		
-		try {
-			conn =  DriverManager.getConnection(url,user,password);
-			System.out.println("===========データベース接続成功");
-			String sql = "INSERT INTO student (name, age) VALUES ('田中', 30)";
-		    PreparedStatement ps = conn.prepareStatement(sql);
-			ps.executeUpdate();
-			System.out.println("===========保存完了");
+		try(Connection conn = DriverManager.getConnection(url,user,password)) {
+		    PreparedStatement ps = conn.prepareStatement(selectSql);
+		    ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				System.out.println(rs.getInt("id"));
+				System.out.println(rs.getString("name"));
+				System.out.println(rs.getInt("age"));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
