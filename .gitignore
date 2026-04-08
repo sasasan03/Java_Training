@@ -1,0 +1,22 @@
+# コンパイル済みファイル
+bin/
+*.class
+
+# IDE設定
+.eclipse
+.settings/
+.project
+.classpath
+*.iml
+.idea/
+*.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+postgres_data/
+
+# ログ
+*.log

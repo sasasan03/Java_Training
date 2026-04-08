@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    container_name: java_training_db
+    environment:
+      POSTGRES_DB: training
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: java_training_app
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: training
+      DB_USER: student
+      DB_PASSWORD: password
+
+volumes:
+  postgres_data:
