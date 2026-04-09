@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 // 一斉リネーム: com + opt + R
@@ -10,25 +11,33 @@ import java.sql.SQLException;
 
 public class Student {
 
+	public static String url = "jdbc:postgresql://localhost:5432/training";
+	public static String user = "student";
+	public static String password = "password";
+	
 	public static void main(String[] args) {
-		String url = "jdbc:postgresql://localhost:5432/training";
-		String user = "student";
-		String password = "password";
-
-		String deleteSql = "DELETE FROM student WHERE id = ?";
-
-		try (Connection conn = DriverManager.getConnection(url, user, password);
-				PreparedStatement ps = conn.prepareStatement(deleteSql);) {
-			ps.setInt(1, 3);
-			int count = ps.executeUpdate();
-			if (count != 0) {
-				System.out.println("削除件数：" + count);
-			} else {
-				System.out.println("該当なし");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+		try {
+			countByAge(30);
+		} catch(SQLException e) {
+			System.out.println(e);
 		}
 	}
-
+	
+	static int countByAge(int minAge) throws SQLException {
+		String sql = "SELECT COUNT(*) AS cnt FROM student WHERE age >= ?";
+		
+		try (Connection conn = DriverManager.getConnection(url, user, password);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			ps.setInt(1,minAge);
+			try (ResultSet rs = ps.executeQuery()){
+				if (rs.next()) {
+					int count = rs.getInt(1);
+					System.out.println("取得件数" + count);
+					return count;
+				}
+			}
+		}
+		return 0;
+	}
 }
+
