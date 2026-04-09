@@ -18,20 +18,27 @@ public class Student {
 	public static void main(String[] args) {
 
 		try {
-			findBySubject("英語");
+			findBySubjectOrderByPoint("英語");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	static void findBySubject(String subject) throws SQLException {
-		String sql = "SELECT name, subject, point FROM student INNER JOIN score ON student.id = score.student_id WHERE score.subject = ?";
+	static void findBySubjectOrderByPoint(String subject) throws SQLException {
+		String sql = "SELECT name, subject, point "
+				+ "FROM student "
+				+ "INNER JOIN score "
+				+ "ON student.id = score.student_id "
+				+ "WHERE score.subject = ? "
+				+ "ORDER BY point DESC";
+				
 		boolean found = false;
 		try (Connection conn = DriverManager.getConnection(url, user, password);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			ps.setString(1, subject);
 			try (ResultSet rs = ps.executeQuery();) {
 				while (rs.next()) {
+					if (!found) found = true;
 					found = true;
 					String name = rs.getString("name");
 					String getSubject = rs.getString("subject");
@@ -45,6 +52,45 @@ public class Student {
 		}
 	}
 }
+
+
+// ===========================================INNER JOIN + WHERE 
+//public class Student {
+//
+//	public static String url = "jdbc:postgresql://localhost:5432/training";
+//	public static String user = "student";
+//	public static String password = "password";
+//
+//	public static void main(String[] args) {
+//
+//		try {
+//			findBySubject("英語");
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	static void findBySubject(String subject) throws SQLException {
+//		String sql = "SELECT name, subject, point FROM student INNER JOIN score ON student.id = score.student_id WHERE score.subject = ?";
+//		boolean found = false;
+//		try (Connection conn = DriverManager.getConnection(url, user, password);
+//				PreparedStatement ps = conn.prepareStatement(sql);) {
+//			ps.setString(1, subject);
+//			try (ResultSet rs = ps.executeQuery();) {
+//				while (rs.next()) {
+//					found = true;
+//					String name = rs.getString("name");
+//					String getSubject = rs.getString("subject");
+//					int point = rs.getInt("point");
+//					System.out.println("名前=" + name + ",科目=" + getSubject + ",点数=" + point);
+//				}
+//			}
+//			if (!found) {
+//				System.out.println("該当なし");
+//			}
+//		}
+//	}
+//}
 
 // =====================================テーブル結合　StudentとScoreの結合。カラムの取得
 //public class Student {
