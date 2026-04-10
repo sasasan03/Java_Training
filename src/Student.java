@@ -17,14 +17,14 @@ public class Student {
 	public static void main(String[] args) {
 
 		try {
-			transfer(100, "中町", 24);
+			transferWithError(2, "中町", 24);
 		} catch (SQLException e) {
 			 System.out.println("処理失敗・ロールバックしました");
 			e.printStackTrace();
 		}
 	}
 
-	static void transfer(int deleteId, String newName, int newAge) throws SQLException {
+	static void transferWithError(int deleteId, String newName, int newAge) throws SQLException {
 		String deleteSql = "DELETE FROM student WHERE id = ?";
 		String insertSql = "INSERT INTO student (name, age) VALUES (?, ?)";
 
@@ -34,12 +34,13 @@ public class Student {
 			conn.setAutoCommit(false);
 			try {
 				deletePs.setInt(1, deleteId);
-				insertPs.setString(1, newName);
-				insertPs.setInt(2, newAge);
-				deletePs.executeUpdate();
-				insertPs.executeUpdate();
-				conn.commit();
-				System.out.println("転校処理完了");
+				throw new SQLException("強制エラー");
+//				insertPs.setString(1, newName);
+//				insertPs.setInt(2, newAge);
+//				deletePs.executeUpdate();
+//				insertPs.executeUpdate();
+//				conn.commit();
+//				System.out.println("転校処理完了");
 			} 
 			 catch(SQLException e) {
 					conn.rollback();
