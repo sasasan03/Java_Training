@@ -1,54 +1,63 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 // 一斉リネーム: com + opt + R
 // 最後尾へ移動： com 矢印
 // 行を複製： com + opt ＋ 下
 // インデックスの整形：　com + shif + F
+// タブの切り替え：　com ＋　[ or  ]
+// 文字サ
 
 public class Student {
 
-	public static String url = "jdbc:postgresql://localhost:5432/training";
-	public static String user = "student";
-	public static String password = "password";
-
 	public static void main(String[] args) {
+		
+		StudentDAO dao = new StudentDAO();
 
 		try {
-			transferWithError(2, "中町", 24);
+			dao.findAll();
 		} catch (SQLException e) {
-			 System.out.println("処理失敗・ロールバックしました");
+			 System.out.println("取得に失敗しました");
 			e.printStackTrace();
 		}
 	}
 
-	static void transferWithError(int deleteId, String newName, int newAge) throws SQLException {
-		String deleteSql = "DELETE FROM student WHERE id = ?";
-		String insertSql = "INSERT INTO student (name, age) VALUES (?, ?)";
-
-		try (Connection conn = DriverManager.getConnection(url, user, password);
-				PreparedStatement deletePs = conn.prepareStatement(deleteSql);
-				PreparedStatement insertPs = conn.prepareStatement(insertSql);) {
-			conn.setAutoCommit(false);
-			try {
-				deletePs.setInt(1, deleteId);
-				throw new SQLException("強制エラー");
-//				insertPs.setString(1, newName);
-//				insertPs.setInt(2, newAge);
-//				deletePs.executeUpdate();
-//				insertPs.executeUpdate();
-//				conn.commit();
-//				System.out.println("転校処理完了");
-			} 
-			 catch(SQLException e) {
-					conn.rollback();
-					throw e;
-			}
-		}
-	}
 }
+
+//public class Student {
+//
+//	public static String url = "jdbc:postgresql://localhost:5432/training";
+//	public static String user = "student";
+//	public static String password = "password";
+//
+//	public static void main(String[] args) {
+//
+//		try {
+//			transferWithError(2, "中町", 24);
+//		} catch (SQLException e) {
+//			 System.out.println("処理失敗・ロールバックしました");
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	static void transferWithError(int deleteId, String newName, int newAge) throws SQLException {
+//		String deleteSql = "DELETE FROM student WHERE id = ?";
+//		String insertSql = "INSERT INTO student (name, age) VALUES (?, ?)";
+//
+//		try (Connection conn = DriverManager.getConnection(url, user, password);
+//				PreparedStatement deletePs = conn.prepareStatement(deleteSql);
+//				PreparedStatement insertPs = conn.prepareStatement(insertSql);) {
+//			conn.setAutoCommit(false);
+//			try {
+//				deletePs.setInt(1, deleteId);
+//				throw new SQLException("強制エラー");
+//				} 
+//			 catch(SQLException e) {
+//					conn.rollback();
+//					throw e;
+//			}
+//		}
+//	}
+//}
 
 //===========================================INNERJOIN WHERE + ORDER BYで得点が高い方順で表示する
 //public class Student {
