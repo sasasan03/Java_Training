@@ -12,7 +12,7 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.avgBySubject();
+			dao.totalByStudent();
 //			System.out.println(">>>>>>>>>>>>>>>>>>>find all");
 //			List<String> list = dao.findAll();
 //			list.forEach(name -> System.out.println("名前：" + name));

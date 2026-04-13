@@ -112,6 +112,27 @@ public class StudentDAO {
 		    throw new AppException("教科の平均点取得に失敗しました", e);
 		}
 	}
+	
+	void totalByStudent() {
+		String sql = "SELECT student.name AS name, SUM(score.point) as total_point"
+				+ " FROM student"
+				+ " INNER JOIN score"
+				+ " ON student.id = score.student_id"
+				+ " GROUP BY student.id, student.name"				
+				+ " ORDER BY total_point DESC";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				while(rs.next()) {
+					String name = rs.getString("name");
+					int total_score = rs.getInt("total_point");
+					System.out.println("名前＝" + name + "、総得点＝" + total_score);
+				}
+			}
+		} catch (SQLException e) {
+		    throw new AppException("教科の平均点取得に失敗しました", e);
+		}
+	}
 }
 
 
