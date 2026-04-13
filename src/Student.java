@@ -1,26 +1,48 @@
 import java.sql.SQLException;
+import java.util.List;
 
 // 一斉リネーム: com + opt + R
 // 最後尾へ移動： com 矢印
 // 行を複製： com + opt ＋ 下
 // インデックスの整形：　com + shif + F
 // タブの切り替え：　com ＋　[ or  ]
-// 文字サ
+// 文字のサイス切り替え：　トラックパッドで２本指
 
 public class Student {
 
 	public static void main(String[] args) {
-		
+
 		StudentDAO dao = new StudentDAO();
 
 		try {
-			dao.findAll();
+//			System.out.println("名前：" + name + "、年齢：" + age);
+			
+			
+			
+			System.out.println("====================前　find all");
+			List<String> list = dao.findAll();
+			list.forEach(name -> System.out.println("名前：" + name));
+//			System.out.println("====================insert");
+//			int insertC = dao.insert("川高", 88);
+//			System.out.println(insertC);
+//			System.out.println("====================update");
+//			int updateC = dao.update(7, "ももたろう", 66);
+//			System.out.println("====================delete");
+//			int delete1 = dao.delete(2);
+//			int delete2 = dao.delete(7);
+			System.out.println("====================findById");
+			String name2 = dao.findById(16);
+			System.out.println("name" + name2);
+//			System.out.println("====================findAll");
+//			dao.findAll();
+			System.out.println("====================後　find all");
+			List<String> list111 = dao.findAll();
+			list111.forEach(name -> System.out.println("名前：" + name));
 		} catch (SQLException e) {
-			 System.out.println("取得に失敗しました");
+			System.out.println("取得に失敗しました");
 			e.printStackTrace();
 		}
 	}
-
 }
 
 //public class Student {
@@ -103,7 +125,6 @@ public class Student {
 //		}
 //	}
 //}
-
 
 // ===========================================INNER JOIN + WHERE 
 //public class Student {
