@@ -30,7 +30,7 @@ public class StudentDAO {
 				return list;
 			}
 		} catch (SQLException e) {
-		    throw new AppException("全件取得に失敗しました", e);
+			throw new AppException("全件取得に失敗しました", e);
 		}
 	}
 
@@ -44,7 +44,7 @@ public class StudentDAO {
 			ps.setInt(2, age);
 			return ps.executeUpdate();
 		} catch (SQLException e) {
-		   throw new AppException("新規作成に失敗しました", e);
+			throw new AppException("新規作成に失敗しました", e);
 		}
 	}
 
@@ -60,7 +60,7 @@ public class StudentDAO {
 			int updateCount = ps.executeUpdate();
 			return updateCount;
 		} catch (SQLException e) {
-		    throw new AppException("記録更新に失敗しました", e);
+			throw new AppException("記録更新に失敗しました", e);
 		}
 	}
 
@@ -70,8 +70,8 @@ public class StudentDAO {
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			ps.setInt(1, id);
 			return ps.executeUpdate();
-		}  catch (SQLException e) {
-		    throw new AppException("記録削除に失敗しました", e);
+		} catch (SQLException e) {
+			throw new AppException("記録削除に失敗しました", e);
 		}
 	}
 
@@ -90,10 +90,10 @@ public class StudentDAO {
 				}
 			}
 		} catch (SQLException e) {
-		    throw new AppException("指定idの取得に失敗しました", e);
+			throw new AppException("指定idの取得に失敗しました", e);
 		}
 	}
-	
+
 	void avgBySubject() {
 		String sql = "SELECT subject, AVG(point) AS avg_point "
 				+ "FROM score "
@@ -101,7 +101,7 @@ public class StudentDAO {
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			try (ResultSet rs = ps.executeQuery();) {
-				while(rs.next()) {
+				while (rs.next()) {
 					String subject = rs.getString("subject");
 					double avg = rs.getInt("avg_point");
 					double rounded = Math.round(avg * 10.0) / 10.0;
@@ -109,33 +109,58 @@ public class StudentDAO {
 				}
 			}
 		} catch (SQLException e) {
-		    throw new AppException("教科の平均点取得に失敗しました", e);
+			throw new AppException("教科の平均点取得に失敗しました", e);
 		}
 	}
-	
+
 	void totalByStudent() {
 		String sql = "SELECT student.name AS name, SUM(score.point) as total_point"
 				+ " FROM student"
 				+ " INNER JOIN score"
 				+ " ON student.id = score.student_id"
-				+ " GROUP BY student.id, student.name"				
+				+ " GROUP BY student.id, student.name"
 				+ " ORDER BY total_point DESC";
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			try (ResultSet rs = ps.executeQuery();) {
-				while(rs.next()) {
+				while (rs.next()) {
 					String name = rs.getString("name");
 					int total_score = rs.getInt("total_point");
 					System.out.println("名前＝" + name + "、総得点＝" + total_score);
 				}
 			}
 		} catch (SQLException e) {
-		    throw new AppException("教科の平均点取得に失敗しました", e);
+			throw new AppException("教科の平均点取得に失敗しました", e);
+		}
+	}
+	
+	void highScoreStudents(int minTotal) {
+		String sql = "SELECT st.name, SUM(point) AS total_point"
+				+ " FROM Student AS st"
+				+ " INNER JOIN score AS sc"
+				+ " ON st.id = sc.student_id"
+				+ " GROUP BY st.id, st.name HAVING SUM(sc.point) >= ?"
+				+ " ORDER BY total_point DESC";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			ps.setInt(1, minTotal);
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					int total_score = rs.getInt("total_point");
+					System.out.println("名前＝" + name + "、総得点＝" + total_score);
+				}
+				if (!found) {
+					System.out.println("該当生徒がいません");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("教科の平均点取得に失敗しました", e);
 		}
 	}
 }
-
-
 
 // ===================================================== CRUDメソッドの実装
 //public class StudentDAO {

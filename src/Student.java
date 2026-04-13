@@ -12,7 +12,21 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.totalByStudent();
+			dao.highScoreStudents(200);
+		} catch (AppException e) {
+		    System.out.println(e.getMessage());
+		    e.printStackTrace();
+		}
+	}
+}
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
 //			System.out.println(">>>>>>>>>>>>>>>>>>>find all");
 //			List<String> list = dao.findAll();
 //			list.forEach(name -> System.out.println("名前：" + name));
@@ -32,12 +46,12 @@ public class Student {
 //			System.out.println("<<<<<<<<<<<<<<<<<<<findAll");
 //			List<String> afterList = dao.findAll();
 //			afterList.forEach(name -> System.out.println("名前：" + name));
-		} catch (AppException e) {
-		    System.out.println(e.getMessage());
-		    e.printStackTrace();
-		}
-	}
-}
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 //public class Student {
 //
