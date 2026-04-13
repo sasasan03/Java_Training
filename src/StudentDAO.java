@@ -18,7 +18,7 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 
-	List<String> findAll() throws SQLException {
+	List<String> findAll() {
 		String sql = "SELECT * FROM student";
 		List<String> list = new ArrayList<>();
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -29,10 +29,12 @@ public class StudentDAO {
 				}
 				return list;
 			}
+		} catch (SQLException e) {
+		    throw new AppException("全件取得に失敗しました", e);
 		}
 	}
 
-	int insert(String name, int age) throws SQLException {
+	int insert(String name, int age) {
 		String sql = "INSERT "
 				+ "INTO student (name, age) "
 				+ "VALUES (?, ?)";
@@ -41,10 +43,12 @@ public class StudentDAO {
 			ps.setString(1, name);
 			ps.setInt(2, age);
 			return ps.executeUpdate();
+		} catch (SQLException e) {
+		   throw new AppException("新規作成に失敗しました", e);
 		}
 	}
 
-	int update(int id, String newName, int newAge) throws SQLException {
+	int update(int id, String newName, int newAge) {
 		String sql = "UPDATE student "
 				+ "SET name = ?, age = ?"
 				+ " WHERE id = ?";
@@ -54,24 +58,24 @@ public class StudentDAO {
 			ps.setInt(2, newAge);
 			ps.setInt(3, id);
 			int updateCount = ps.executeUpdate();
-			if (updateCount == 0) {
-				return 0;
-			} else {
-				return updateCount; 
-			}
+			return updateCount;
+		} catch (SQLException e) {
+		    throw new AppException("記録更新に失敗しました", e);
 		}
 	}
 
-	int delete(int id) throws SQLException {
+	int delete(int id) {
 		String sql = "DELETE FROM student WHERE id = ?";
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			ps.setInt(1, id);
 			return ps.executeUpdate();
+		}  catch (SQLException e) {
+		    throw new AppException("記録削除に失敗しました", e);
 		}
 	}
 
-	String findById(int id) throws SQLException {
+	String findById(int id) {
 		String sql = "SELECT name, age"
 				+ " FROM student"
 				+ " WHERE id = ?";
@@ -85,6 +89,27 @@ public class StudentDAO {
 					return null;
 				}
 			}
+		} catch (SQLException e) {
+		    throw new AppException("指定idの取得に失敗しました", e);
+		}
+	}
+	
+	void avgBySubject() {
+		String sql = "SELECT subject, AVG(point) AS avg_point "
+				+ "FROM score "
+				+ "GROUP BY subject";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				while(rs.next()) {
+					String subject = rs.getString("subject");
+					double avg = rs.getInt("avg_point");
+					double rounded = Math.round(avg * 10.0) / 10.0;
+					System.out.println("科目＝" + subject + "平均点＝" + rounded);
+				}
+			}
+		} catch (SQLException e) {
+		    throw new AppException("教科の平均点取得に失敗しました", e);
 		}
 	}
 }
