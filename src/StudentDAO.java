@@ -139,7 +139,8 @@ public class StudentDAO {
 				+ " FROM Student AS st"
 				+ " INNER JOIN score AS sc"
 				+ " ON st.id = sc.student_id"
-				+ " GROUP BY st.id, st.name HAVING SUM(sc.point) >= ?"
+				+ " GROUP BY st.id, st.name"
+				+ " HAVING SUM(sc.point) >= ?"
 				+ " ORDER BY total_point DESC";
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
@@ -149,8 +150,8 @@ public class StudentDAO {
 				while (rs.next()) {
 					found = true;
 					String name = rs.getString("name");
-					int total_score = rs.getInt("total_point");
-					System.out.println("名前＝" + name + "、総得点＝" + total_score);
+					int totalScore = rs.getInt("total_point");
+					System.out.println("名前＝" + name + "、総得点＝" + totalScore);
 				}
 				if (!found) {
 					System.out.println("該当生徒がいません");
@@ -160,6 +161,32 @@ public class StudentDAO {
 			throw new AppException("教科の平均点取得に失敗しました", e);
 		}
 	}
+	
+	void highScoreExcludeSubject(String excludeSubject, int minTotal) {
+		String sql = "SELECT st.name, SUM(point) AS total_point"
+				+ " FROM score AS sc"
+				+ " INNER JOIN student AS st"
+				+ " ON sc.student_id = st.id"
+				+ " WHERE sc.subject != ?"
+				+ " GROUP BY st.name"
+				+ " HAVING SUM(point) >= ?"
+				+ " ORDER BY total_point DESC";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);){
+			ps.setString(1, excludeSubject);
+			ps.setInt(2, minTotal);
+			try(ResultSet rs = ps.executeQuery();) {
+				while(rs.next()) {
+					String name = rs.getString("name");
+					int totalPoint = rs.getInt("total_point");
+					System.out.println("名前＝" + name + "、合計得点＝" + totalPoint);
+				}
+			}
+		}  catch (SQLException e) {
+			throw new AppException("特定の科目を除外した合計点が高い学生の絞り込みデータ取得に失敗しました", e);
+		}
+	}
+	
 }
 
 // ===================================================== CRUDメソッドの実装

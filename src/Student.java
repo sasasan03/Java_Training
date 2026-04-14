@@ -12,13 +12,28 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.highScoreStudents(200);
+			dao.highScoreExcludeSubject("英語",70);
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
 		}
 	}
 }
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
+//			dao.highScoreStudents(200);
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 //public class Student {
 //
