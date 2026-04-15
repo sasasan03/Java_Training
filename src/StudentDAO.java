@@ -3,6 +3,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,36 @@ public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void findLogByStudentId(int studentId) {
+		String sql = "SELECT * FROM access_log WHERE student_id = ?";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);){
+			long start = System.currentTimeMillis();
+			ps.setInt(1, studentId);
+			try(ResultSet rs = ps.executeQuery();) {
+				int count = 0;
+				while(rs.next()) {
+					count++;
+					int studentID = rs.getInt("student_id");
+					LocalDateTime time = rs.getTimestamp("accessed_at").toLocalDateTime();
+					String page = rs.getString("page");
+					System.out.println("========================");
+					System.out.println("生徒ID=" + studentID + "、アクセス時間=" + time + "、ページ=" + page);
+				}
+				System.out.println("取得件数: " + count + "件");
+				if(count == 0) {
+					System.out.println("該当なし");
+				}
+			}
+			long end = System.currentTimeMillis();
+			System.out.println("実行時間: " + (end - start) + "ms");
+			// Indexなし：　取得件数: 4938件 実行時間: 70ms
+			// Indexあり：
+		} catch(SQLException e) {
+			throw new AppException("指定した生徒IDでデータ取得ができませんでした", e);
+		}
+	}
 	
 	void studentsWithScore() {
 		String sql = "SELECT st.name, "
