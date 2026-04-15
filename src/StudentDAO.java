@@ -18,6 +18,33 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void studentsWithScore() {
+		String sql = "SELECT st.name, "
+				+ "st.age FROM student AS st "
+				+ "WHERE EXISTS("
+				+ "		SELECT 1 "
+				+ "		FROM score AS sc "
+				+ "		WHERE sc.student_id = st.id"
+				+ ")";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);){
+			try(ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while(rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					int age = rs.getInt("age");
+					System.out.println("名前=" + name + "、年齢=" + age);
+				}
+				if(!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch(SQLException e) {
+			throw new AppException("得点が存在する生徒の名前と年齢のデータ取得に失敗しました", e);
+		}
+	}
+	
 	void maxScorePerStudent() {
 		String sql = "SELECT st.name, tmp.max_p "
 				+ "FROM (SELECT student_id, MAX(point) AS max_p FROM score GROUP BY student_id) AS tmp "
@@ -26,16 +53,21 @@ public class StudentDAO {
 		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			try(ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
 				while(rs.next()) {
+					found = true;
 					String name = rs.getString("name");
 					int maxPoint = rs.getInt("max_p");
 					System.out.println("名前=" + name + "、最高得点=" + maxPoint);
 				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
 			}
+			
 		} catch(SQLException e) {
 			throw new AppException("生徒名とその生徒の最高点数のデータ取得に失敗しました", e);
 		}
-				
 	}
 	
 	void aboveAverage() {
