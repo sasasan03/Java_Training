@@ -21,6 +21,36 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	
+	void pointWithStudentAvg() {
+		String sql = "SELECT st.name, sc.subject, sc.point, "
+				+ "AVG(sc.point) "
+				+ "OVER (PARTITION BY st.id) AS avg_point "
+				+ "FROM student AS st "
+				+ "INNER JOIN score AS sc "
+				+ "ON st.id = sc.student_id "
+				+ "ORDER BY st.id";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					double avg = Math.round(rs.getDouble("avg_point") * 10 ) / 10;
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",全体平均=" + avg);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("学生毎の平均点のデータ取得ができませんでした", e);
+		}
+	}
+	
 	void pointWithAvg() {
 		String sql = "SELECT st.name, sc.subject, sc.point, AVG(sc.point) OVER () AS avg_point "
 				+ "FROM student AS st "
