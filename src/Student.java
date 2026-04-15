@@ -12,13 +12,29 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.explainQuery(1);
+			dao.findLogByStudentIdAndPage(1, "page_50");
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
 		}
 	}
 }
+
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
+//			dao.explainQuery(1);
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 //public class Student {
 //

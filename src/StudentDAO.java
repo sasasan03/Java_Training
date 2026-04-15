@@ -18,6 +18,47 @@ public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void findLogByStudentIdAndPage(int studentId, String page) {
+	    // 1回目：EXPLAINで実行計画を表示
+	    String explainSql = "EXPLAIN SELECT * FROM access_log WHERE student_id = ? AND page = ?";
+	    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+	         PreparedStatement ps = conn.prepareStatement(explainSql)) {
+	        ps.setInt(1, studentId);
+	        ps.setString(2, page);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                System.out.println(rs.getString(1));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        throw new AppException("実行計画の取得に失敗しました", e);
+	    }
+
+	    // 2回目：実際のデータ取得と時間計測
+	    String dataSql = "SELECT * FROM access_log WHERE student_id = ? AND page = ?";
+	    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+	         PreparedStatement ps = conn.prepareStatement(dataSql)) {
+	        long start = System.currentTimeMillis();
+	        ps.setInt(1, studentId);
+	        ps.setString(2, page);
+	        int count = 0;
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                count++;
+	            }
+	        }
+	        long end = System.currentTimeMillis();
+	        if (count == 0) {
+	            System.out.println("該当なし");
+	        } else {
+	            System.out.println("取得件数: " + count + "件");
+	        }
+	        System.out.println("実行時間: " + (end - start) + "ms");
+	    } catch (SQLException e) {
+	        throw new AppException("データ取得に失敗しました", e);
+	    }
+	}
 
 	void explainQuery(int studentId) {
 		String sql = "EXPLAIN SELECT * FROM access_log WHERE student_id = ?";
