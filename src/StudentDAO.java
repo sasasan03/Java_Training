@@ -14,11 +14,40 @@ import java.util.List;
 //タブの切り替え：　com ＋　[ or  ]
 //文字のサイス切り替え：　トラックパッドで２本指
 
+// OVER・・・行を集約せずに集計結果を各行に付加できる
+
 public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void pointWithAvg() {
+		String sql = "SELECT st.name, sc.subject, sc.point, AVG(sc.point) OVER () AS avg_point "
+				+ "FROM student AS st "
+				+ "INNER JOIN score AS sc "
+				+ "ON st.id = sc.student_id "
+				+ "ORDER BY st.id";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					double avg = Math.round(rs.getDouble("avg_point") * 10 ) / 10;
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",全体平均=" + avg);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("生徒情報と生徒の科目・点数と平均データ取得ができませんでした", e);
+		}
+	}
+ 	
 	void findLogByStudentIdAndPage(int studentId, String page) {
 	    // 1回目：EXPLAINで実行計画を表示
 	    String explainSql = "EXPLAIN SELECT * FROM access_log WHERE student_id = ? AND page = ?";
