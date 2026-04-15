@@ -5,8 +5,6 @@
 // タブの切り替え：　com ＋　[ or  ]
 // 文字のサイス切り替え：　トラックパッドで２本指
 
-
-
 public class Student {
 
 	public static void main(String[] args) {
@@ -14,13 +12,28 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.findLogByStudentId(1);
+			dao.explainQuery(1);
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
 		}
 	}
 }
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
+//			dao.findLogByStudentId(1);
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 //public class Student {
 //
