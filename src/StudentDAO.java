@@ -168,7 +168,7 @@ public class StudentDAO {
 				+ " INNER JOIN student AS st"
 				+ " ON sc.student_id = st.id"
 				+ " WHERE sc.subject != ?"
-				+ " GROUP BY st.name"
+				+ " GROUP BY st.id, st.name"
 				+ " HAVING SUM(point) >= ?"
 				+ " ORDER BY total_point DESC";
 		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -176,10 +176,15 @@ public class StudentDAO {
 			ps.setString(1, excludeSubject);
 			ps.setInt(2, minTotal);
 			try(ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
 				while(rs.next()) {
+					found = true;
 					String name = rs.getString("name");
 					int totalPoint = rs.getInt("total_point");
 					System.out.println("名前＝" + name + "、合計得点＝" + totalPoint);
+				}
+				if (!found) {
+					System.out.println("該当なし");
 				}
 			}
 		}  catch (SQLException e) {
@@ -187,6 +192,29 @@ public class StudentDAO {
 		}
 	}
 	
+	void aboveAverage() {
+		String sql = "SELECT sc.student_id AS id, st.name AS name, sc.point AS point"
+				+ " FROM score AS sc"
+				+ " LEFT JOIN student AS st"
+				+ " ON sc.student_id = st.id"
+				+ " WHERE point > (SELECT AVG(point) FROM score)";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try(ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while(rs.next()) {
+					found = true;
+					int id = rs.getInt("id");
+					String name = rs.getString("name");
+					int point = rs.getInt("point");
+					System.out.println("名前=" + name + "点数=" + point);
+				}
+			}
+		} catch(SQLException e) {
+			throw new AppException("平均点以上をとった生徒IDと得点のデータ取得に失敗しました", e);
+		}
+	}
+ 	
 }
 
 // ===================================================== CRUDメソッドの実装
