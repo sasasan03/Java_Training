@@ -17,6 +17,52 @@ public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void maxScorePerStudent() {
+		String sql = "SELECT st.name, tmp.max_p "
+				+ "FROM (SELECT student_id, MAX(point) AS max_p FROM score GROUP BY student_id) AS tmp "
+				+ "INNER JOIN student AS st "
+				+ "ON tmp.student_id = st.id";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try(ResultSet rs = ps.executeQuery();) {
+				while(rs.next()) {
+					String name = rs.getString("name");
+					int maxPoint = rs.getInt("max_p");
+					System.out.println("名前=" + name + "、最高得点=" + maxPoint);
+				}
+			}
+		} catch(SQLException e) {
+			throw new AppException("生徒名とその生徒の最高点数のデータ取得に失敗しました", e);
+		}
+				
+	}
+	
+	void aboveAverage() {
+		String sql = "SELECT sc.student_id AS id, st.name AS name, sc.point AS point"
+				+ " FROM score AS sc"
+				+ " LEFT JOIN student AS st"
+				+ " ON sc.student_id = st.id"
+				+ " WHERE point >= (SELECT AVG(point) FROM score)";
+		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try(ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while(rs.next()) {
+					found = true;
+					int id = rs.getInt("id");
+					String name = rs.getString("name");
+					int point = rs.getInt("point");
+					System.out.println("名前=" + name + "点数=" + point);
+				}
+				if (!found) {
+				    System.out.println("該当なし");
+				}
+			}
+		} catch(SQLException e) {
+			throw new AppException("平均点以上をとった生徒ID・名前・得点のデータ取得に失敗しました", e);
+		}
+	}
 
 	List<String> findAll() {
 		String sql = "SELECT * FROM student";
@@ -190,31 +236,7 @@ public class StudentDAO {
 		}  catch (SQLException e) {
 			throw new AppException("特定の科目を除外した合計点が高い学生の絞り込みデータ取得に失敗しました", e);
 		}
-	}
-	
-	void aboveAverage() {
-		String sql = "SELECT sc.student_id AS id, st.name AS name, sc.point AS point"
-				+ " FROM score AS sc"
-				+ " LEFT JOIN student AS st"
-				+ " ON sc.student_id = st.id"
-				+ " WHERE point > (SELECT AVG(point) FROM score)";
-		try(Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-				PreparedStatement ps = conn.prepareStatement(sql);) {
-			try(ResultSet rs = ps.executeQuery();) {
-				boolean found = false;
-				while(rs.next()) {
-					found = true;
-					int id = rs.getInt("id");
-					String name = rs.getString("name");
-					int point = rs.getInt("point");
-					System.out.println("名前=" + name + "点数=" + point);
-				}
-			}
-		} catch(SQLException e) {
-			throw new AppException("平均点以上をとった生徒IDと得点のデータ取得に失敗しました", e);
-		}
-	}
- 	
+	} 	
 }
 
 // ===================================================== CRUDメソッドの実装

@@ -6,6 +6,7 @@
 // 文字のサイス切り替え：　トラックパッドで２本指
 
 
+
 public class Student {
 
 	public static void main(String[] args) {
@@ -13,13 +14,28 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.aboveAverage();
+			dao.maxScorePerStudent();
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
 		}
 	}
 }
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
+//			dao.aboveAverage();
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 
 //public class Student {
