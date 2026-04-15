@@ -13,13 +13,28 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.rowNumberBySubject();
+			dao.scoreWithGrade();
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
 		}
 	}
 }
+
+//public class Student {
+//
+//	public static void main(String[] args) {
+//
+//		StudentDAO dao = new StudentDAO();
+//		
+//		try {
+//			dao.rowNumberBySubject();
+//		} catch (AppException e) {
+//		    System.out.println(e.getMessage());
+//		    e.printStackTrace();
+//		}
+//	}
+//}
 
 //public class Student {
 //

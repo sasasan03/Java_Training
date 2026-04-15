@@ -24,13 +24,18 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
-	void rowNumberBySubject() {
+	void scoreWithGrade() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
-				+ "ROW_NUMBER() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS row_number "
+				+ "CASE "
+				+ " WHEN sc.point >= 80 THEN '優' "
+				+ "	WHEN sc.point >= 70 THEN '良' "
+				+ "	WHEN sc.point >= 60 THEN '可' "
+				+ "	ELSE '不可' "
+				+ "END AS evaluation "
 				+ "FROM student AS st "
 				+ "INNER JOIN score AS sc "
 				+ "ON st.id = sc.student_id "
-				+ "ORDER BY sc.subject, row_number";
+				+ "ORDER BY st.id";
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			try (ResultSet rs = ps.executeQuery();) {
@@ -40,7 +45,35 @@ public class StudentDAO {
 					String name = rs.getString("name");
 					String subject = rs.getString("subject");
 					int point = rs.getInt("point");
-					int rowNumber = rs.getInt("row_number");
+					String evaluation = rs.getString("evaluation");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",評価=" + evaluation);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("評価を取得ができませんでした", e);
+		}
+	}
+	
+	void rowNumberBySubject() {
+		String sql = "SELECT st.name, sc.subject, sc.point, "
+				+ "ROW_NUMBER() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS row_num "
+				+ "FROM student AS st "
+				+ "INNER JOIN score AS sc "
+				+ "ON st.id = sc.student_id "
+				+ "ORDER BY sc.subject, row_num";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					int rowNumber = rs.getInt("row_num");
 					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",連番=" + rowNumber);
 				}
 				if (!found) {
