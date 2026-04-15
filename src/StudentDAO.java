@@ -15,17 +15,76 @@ import java.util.List;
 //文字のサイス切り替え：　トラックパッドで２本指
 
 // OVER・・・行を集約せずに集計結果を各行に付加できる
+// PARTITOIN BY ・・・OVERの中で使用するここで指定したもので分割して計算できる
+// RANK・・・同じ順位・次の順位を飛ばす（1・1・3）
+// ROW_NUMBER()・・・必ず連番・同点でも別の番号（1・2・3）
 
 public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void rowNumberBySubject() {
+		String sql = "SELECT st.name, sc.subject, sc.point, "
+				+ "ROW_NUMBER() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS row_number "
+				+ "FROM student AS st "
+				+ "INNER JOIN score AS sc "
+				+ "ON st.id = sc.student_id "
+				+ "ORDER BY sc.subject, row_number";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					int rowNumber = rs.getInt("row_number");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",連番=" + rowNumber);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("各科目の連番取得ができませんでした", e);
+		}
+	}
+	
+	void rankBySubject() {
+		String sql = "SELECT st.name, sc.subject, sc.point, "
+				+ "RANK() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS rank_num "
+				+ "FROM student AS st "
+				+ "INNER JOIN score AS sc "
+				+ "ON st.id = sc.student_id "
+				+ "ORDER BY sc.subject, rank_num";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					int rankNum = rs.getInt("rank_num");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",順位=" + rankNum);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("各科目の順位データ取得ができませんでした", e);
+		}
+	}
+	
 	
 	void pointWithStudentAvg() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "AVG(sc.point) "
-				+ "OVER (PARTITION BY st.id) AS avg_point "
+				+ "OVER (PARTITION BY st.id) AS student_avg "
 				+ "FROM student AS st "
 				+ "INNER JOIN score AS sc "
 				+ "ON st.id = sc.student_id "
@@ -39,8 +98,8 @@ public class StudentDAO {
 					String name = rs.getString("name");
 					String subject = rs.getString("subject");
 					int point = rs.getInt("point");
-					double avg = Math.round(rs.getDouble("avg_point") * 10 ) / 10;
-					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",全体平均=" + avg);
+					double avg = Math.round(rs.getDouble("student_avg") * 10.0 ) / 10.0;
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",生徒平均=" + avg);
 				}
 				if (!found) {
 					System.out.println("該当なし");
