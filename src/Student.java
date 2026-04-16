@@ -13,7 +13,7 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.scoreWithGrade();
+			dao.findByGrade("優");
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();

@@ -18,11 +18,46 @@ import java.util.List;
 // PARTITOIN BY ・・・OVERの中で使用するここで指定したもので分割して計算できる
 // RANK・・・同じ順位・次の順位を飛ばす（1・1・3）
 // ROW_NUMBER()・・・必ず連番・同点でも別の番号（1・2・3）
+// [CASE] WHEN THEN ELSE [END]
 
 public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void findByGrade(String grade) {
+		String sql = "SELECT st.name, sc.subject, sc.point "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st "
+				+ "ON sc.student_id = st.id WHERE( "
+				+ " CASE "
+				+ "   WHEN sc.point >= 80 THEN '優' "
+				+ "   WHEN sc.point >= 70 THEN '良' "
+				+ "   WHEN sc.point >= 60 THEN '可' "
+				+ "   ELSE '不可' "
+				+ "  END "
+				+ ") = ? "
+				+ "ORDER BY st.id";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			ps.setString(1, grade);
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("評価を取得ができませんでした", e);
+		}
+	}
 	
 	void scoreWithGrade() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
