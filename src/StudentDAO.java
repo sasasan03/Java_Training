@@ -25,6 +25,38 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void  orderByGrade() {
+		String sql = "SELECT st.name, sc.subject, sc.point "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st "
+				+ "ON sc.student_id = st.id "
+				+ "ORDER BY "
+				+ "CASE "
+				+ " WHEN sc.point >= 80 THEN 1 "
+				+ " WHEN sc.point >= 70 THEN 2 "
+				+ " WHEN sc.point >= 60 THEN 3 "
+				+ " ELSE 4 "
+				+ "END ";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("80点以上の生徒を取得できませんでした", e);
+		}
+	}
+	
 	void findByGrade(String grade) {
 		String sql = "SELECT st.name, sc.subject, sc.point "
 				+ "FROM score AS sc "
@@ -55,7 +87,7 @@ public class StudentDAO {
 				}
 			}
 		} catch (SQLException e) {
-			throw new AppException("評価を取得ができませんでした", e);
+			throw new AppException("80点以上の生徒を取得できませんでした", e);
 		}
 	}
 	
