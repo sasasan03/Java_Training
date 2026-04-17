@@ -24,8 +24,39 @@ public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
-	
-	void  orderByGrade() {
+
+	void countByGradeAndSubject() {
+		String sql = "SELECT sc.subject, "
+				+ "SUM(CASE WHEN sc.point >= 80 THEN 1 ELSE 0 END) AS excellent, "
+				+ "SUM(CASE WHEN sc.point >= 70 AND sc.point < 80 THEN 1 ELSE 0 END) AS good, "
+				+ "SUM(CASE WHEN sc.point >= 60 AND sc.point < 70 THEN 1 ELSE 0 END) AS average, "
+				+ "SUM(CASE WHEN sc.point < 60 THEN 1 ELSE 0 END) AS poor "
+				+ "FROM score AS sc "
+				+ "GROUP BY sc.subject "
+				+ "ORDER BY sc.subject";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String subject = rs.getString("subject");
+					int excellent = rs.getInt("excellent");
+					int good = rs.getInt("good");
+					int average = rs.getInt("average");
+					int poor = rs.getInt("poor");
+					System.out.println("科目=" + subject + " 「優」" + excellent + "、「良」" + good + "、「平均」" + average + "、「だめ」" + poor);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("教科毎の得点評価を取得できませんでした", e);
+		}
+	}
+
+	void orderByGrade() {
 		String sql = "SELECT st.name, sc.subject, sc.point "
 				+ "FROM score AS sc "
 				+ "INNER JOIN student AS st "
@@ -56,7 +87,7 @@ public class StudentDAO {
 			throw new AppException("80点以上の生徒を取得できませんでした", e);
 		}
 	}
-	
+
 	void findByGrade(String grade) {
 		String sql = "SELECT st.name, sc.subject, sc.point "
 				+ "FROM score AS sc "
@@ -90,7 +121,7 @@ public class StudentDAO {
 			throw new AppException("80点以上の生徒を取得できませんでした", e);
 		}
 	}
-	
+
 	void scoreWithGrade() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "CASE "
@@ -123,7 +154,7 @@ public class StudentDAO {
 			throw new AppException("評価を取得ができませんでした", e);
 		}
 	}
-	
+
 	void rowNumberBySubject() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "ROW_NUMBER() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS row_num "
@@ -151,7 +182,7 @@ public class StudentDAO {
 			throw new AppException("各科目の連番取得ができませんでした", e);
 		}
 	}
-	
+
 	void rankBySubject() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "RANK() OVER (PARTITION BY sc.subject ORDER BY sc.point DESC) AS rank_num "
@@ -179,8 +210,7 @@ public class StudentDAO {
 			throw new AppException("各科目の順位データ取得ができませんでした", e);
 		}
 	}
-	
-	
+
 	void pointWithStudentAvg() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "AVG(sc.point) "
@@ -198,7 +228,7 @@ public class StudentDAO {
 					String name = rs.getString("name");
 					String subject = rs.getString("subject");
 					int point = rs.getInt("point");
-					double avg = Math.round(rs.getDouble("student_avg") * 10.0 ) / 10.0;
+					double avg = Math.round(rs.getDouble("student_avg") * 10.0) / 10.0;
 					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",生徒平均=" + avg);
 				}
 				if (!found) {
@@ -209,7 +239,7 @@ public class StudentDAO {
 			throw new AppException("学生毎の平均点のデータ取得ができませんでした", e);
 		}
 	}
-	
+
 	void pointWithAvg() {
 		String sql = "SELECT st.name, sc.subject, sc.point, AVG(sc.point) OVER () AS avg_point "
 				+ "FROM student AS st "
@@ -225,7 +255,7 @@ public class StudentDAO {
 					String name = rs.getString("name");
 					String subject = rs.getString("subject");
 					int point = rs.getInt("point");
-					double avg = Math.round(rs.getDouble("avg_point") * 10 ) / 10;
+					double avg = Math.round(rs.getDouble("avg_point") * 10) / 10;
 					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + ",全体平均=" + avg);
 				}
 				if (!found) {
@@ -236,46 +266,46 @@ public class StudentDAO {
 			throw new AppException("生徒情報と生徒の科目・点数と平均データ取得ができませんでした", e);
 		}
 	}
- 	
-	void findLogByStudentIdAndPage(int studentId, String page) {
-	    // 1回目：EXPLAINで実行計画を表示
-	    String explainSql = "EXPLAIN SELECT * FROM access_log WHERE student_id = ? AND page = ?";
-	    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-	         PreparedStatement ps = conn.prepareStatement(explainSql)) {
-	        ps.setInt(1, studentId);
-	        ps.setString(2, page);
-	        try (ResultSet rs = ps.executeQuery()) {
-	            while (rs.next()) {
-	                System.out.println(rs.getString(1));
-	            }
-	        }
-	    } catch (SQLException e) {
-	        throw new AppException("実行計画の取得に失敗しました", e);
-	    }
 
-	    // 2回目：実際のデータ取得と時間計測
-	    String dataSql = "SELECT * FROM access_log WHERE student_id = ? AND page = ?";
-	    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-	         PreparedStatement ps = conn.prepareStatement(dataSql)) {
-	        long start = System.currentTimeMillis();
-	        ps.setInt(1, studentId);
-	        ps.setString(2, page);
-	        int count = 0;
-	        try (ResultSet rs = ps.executeQuery()) {
-	            while (rs.next()) {
-	                count++;
-	            }
-	        }
-	        long end = System.currentTimeMillis();
-	        if (count == 0) {
-	            System.out.println("該当なし");
-	        } else {
-	            System.out.println("取得件数: " + count + "件");
-	        }
-	        System.out.println("実行時間: " + (end - start) + "ms");
-	    } catch (SQLException e) {
-	        throw new AppException("データ取得に失敗しました", e);
-	    }
+	void findLogByStudentIdAndPage(int studentId, String page) {
+		// 1回目：EXPLAINで実行計画を表示
+		String explainSql = "EXPLAIN SELECT * FROM access_log WHERE student_id = ? AND page = ?";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(explainSql)) {
+			ps.setInt(1, studentId);
+			ps.setString(2, page);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					System.out.println(rs.getString(1));
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("実行計画の取得に失敗しました", e);
+		}
+
+		// 2回目：実際のデータ取得と時間計測
+		String dataSql = "SELECT * FROM access_log WHERE student_id = ? AND page = ?";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(dataSql)) {
+			long start = System.currentTimeMillis();
+			ps.setInt(1, studentId);
+			ps.setString(2, page);
+			int count = 0;
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					count++;
+				}
+			}
+			long end = System.currentTimeMillis();
+			if (count == 0) {
+				System.out.println("該当なし");
+			} else {
+				System.out.println("取得件数: " + count + "件");
+			}
+			System.out.println("実行時間: " + (end - start) + "ms");
+		} catch (SQLException e) {
+			throw new AppException("データ取得に失敗しました", e);
+		}
 	}
 
 	void explainQuery(int studentId) {
