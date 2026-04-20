@@ -26,6 +26,66 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void scoreWithMessage() {
+		String sql = "SELECT st.name, sc.point, "
+				+ "CASE "
+				+ " WHEN sc.point >= 90 THEN 'よくできました' "
+				+ " WHEN sc.point >= 75 THEN 'がんばりました' "
+				+ " WHEN sc.point >= 60 THEN 'もうすこし' "
+				+ "ELSE '要復習' END evaluation "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st ON sc.student_id = st.id "
+				+ "ORDER BY st.id";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					int point = rs.getInt("point");
+					String evaluation = rs.getString("evaluation");
+					System.out.println("名前=" + name + ", 点数=" + point + ", 評価=" + evaluation);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("教科の評価データを取得できませんでした", e);
+		}
+	}
+	
+	void bestSubjectPerStudent() {
+		String sql = "SELECT st.name, sc.subject, sc.point "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st ON sc.student_id = st.id "
+				+ "WHERE (sc.student_id, sc.point) IN ( "
+				+ " SELECT student_id, MAX(point) "
+				+ " FROM score "
+				+ " GROUP BY student_id "
+				+ ") "
+				+ "ORDER BY st.id";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("各生徒の前回比のデータを取得できませんでした", e);
+		}
+	}
+	
 	void scoreWithDiff() {
 		String sql = "SELECT st.name, sc.subject, sc.point, "
 				+ "LAG(sc.point) OVER (PARTITION BY sc.student_id ORDER BY sc.subject) AS prev_point, "
