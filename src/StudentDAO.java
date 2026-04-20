@@ -19,11 +19,45 @@ import java.util.List;
 // RANK・・・同じ順位・次の順位を飛ばす（1・1・3）
 // ROW_NUMBER()・・・必ず連番・同点でも別の番号（1・2・3）
 // [CASE] WHEN THEN ELSE [END]
+// LAG・・・
 
 public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void scoreWithDiff() {
+		String sql = "SELECT st.name, sc.subject, sc.point, "
+				+ "LAG(sc.point) OVER (PARTITION BY sc.student_id ORDER BY sc.subject) AS prev_point, "
+				+ "CASE "
+				+ " WHEN LAG(sc.point) OVER (PARTITION BY sc.student_id ORDER BY sc.subject) IS NULL THEN '-' "
+				+ " WHEN sc.point > LAG(sc.point) OVER (PARTITION BY sc.student_id ORDER BY sc.subject) THEN '上昇' "
+				+ " WHEN sc.point < LAG(sc.point) OVER (PARTITION BY sc.student_id ORDER BY sc.subject) THEN '下降' "
+				+ " ELSE '同じ' "
+				+ "END AS trend "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st ON sc.student_id = st.id "
+				+ "ORDER BY st.id, sc.subject";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					String subject = rs.getString("subject");
+					int point = rs.getInt("point");
+					String trend = rs.getString("trend") ;
+					System.out.println("名前=" + name + ", 科目=" + subject + ", 点数=" + point + "前回比=" + trend);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("各生徒の前回比のデータを取得できませんでした", e);
+		}
+	}
 
 	void countByGradeAndSubject() {
 		String sql = "SELECT sc.subject, "
@@ -45,7 +79,7 @@ public class StudentDAO {
 					int good = rs.getInt("good");
 					int average = rs.getInt("average");
 					int poor = rs.getInt("poor");
-					System.out.println("科目=" + subject + " 「優」" + excellent + "、「良」" + good + "、「平均」" + average + "、「だめ」" + poor);
+					System.out.println("科目=" + subject + " 「優」" + excellent + "、「良」" + good + "、「可」" + average + "、「不可」" + poor);
 				}
 				if (!found) {
 					System.out.println("該当なし");
