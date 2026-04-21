@@ -26,6 +26,35 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void checkEligibility() {
+		String sql = "SELECT st.name, st.age, "
+				+ "CASE "
+				+ " WHEN st.age < 18 THEN '受験不可' "
+				+ " WHEN st.age BETWEEN 25 AND 18 THEN '一般受験' "
+				+ " WHEN st.age BETWEEN 40 AND 26 THEN '社会人受験' "
+				+ "ELSE '要相談' END AS eligibility "
+				+ "FROM student AS st "
+				+ "ORDER BY st.age ";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					int age = rs.getInt("age");
+					String eligibility = rs.getString("eligibility");
+					System.out.println("名前=" + name + ", 年齢=" + age + "、資格＝" + eligibility);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("受験資格情報の取得に失敗しました", e);
+		}
+	}
+	
 	void overallEvaluation() {
 		String sql = "SELECT st.name, "
 				+ "ROUND(AVG(sc.point), 1) AS avg, "

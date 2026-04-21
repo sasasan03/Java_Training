@@ -13,7 +13,7 @@ public class Student {
 		StudentDAO dao = new StudentDAO();
 		
 		try {
-			dao.overallEvaluation();
+			dao.checkEligibility();
 		} catch (AppException e) {
 		    System.out.println(e.getMessage());
 		    e.printStackTrace();
