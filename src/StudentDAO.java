@@ -26,6 +26,43 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void overallEvaluation() {
+		String sql = "SELECT st.name, "
+				+ "ROUND(AVG(sc.point), 1) AS avg, "
+				+ "CASE "
+				+ " WHEN AVG(sc.point) >= 80 THEN 'A' "
+				+ " WHEN AVG(sc.point) >= 70 THEN 'B' "
+				+ " WHEN AVG(sc.point) < 70 THEN 'C' "
+				+ "ELSE NULL END AS evaluation, "
+				+ "CASE "
+				+ " WHEN MAX(sc.point) - MIN(sc.point) >= 20 THEN '不安定' "
+				+ " WHEN MAX(sc.point) - MIN(sc.point) < 20 THEN '安定' "
+				+ "ELSE NULL END status "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st ON sc.student_id = st.id "
+				+ "GROUP BY st.name "
+				+ "ORDER BY AVG(sc.point) DESC ";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					double avg = rs.getDouble("avg");
+					String eva = rs.getString("evaluation");
+					String status = rs.getString("status");
+					System.out.println("名前=" + name + ", 平均=" + avg + "、レベル＝" + eva + "、安定度＝" + status);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("総合評価の取得に失敗しました", e);
+		}
+	}
+	
 	void scoreTrend() {
 		String sql = "SELECT st.name, "
 				+ "MAX(sc.point) AS max_point, "
@@ -51,7 +88,7 @@ public class StudentDAO {
 					int minPoint = rs.getInt("min_point");
 					int diff = rs.getInt("diff");
 					String evaluation = rs.getString("evaluation");
-					System.out.println("名前=" + name + ", 最高=" + maxPoint + "、最低＝" + minPoint + "、分類＝" + diff + "、評価" + evaluation);
+					System.out.println("名前=" + name + ", 最高=" + maxPoint + "、最低＝" + minPoint + "、差分＝" + diff + "、評価" + evaluation);
 				}
 				if (!found) {
 					System.out.println("該当なし");
