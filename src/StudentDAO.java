@@ -26,6 +26,37 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void passFailBySubject() {
+		String sql = "SELECT sc.subject, "
+				+ "SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) AS pass, "
+				+ "SUM(CASE WHEN sc.point < 70 THEN 1 ELSE 0 END)  AS fail, "
+				+ "SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) * 100.0 / COUNT(sc.student_id) AS pass_rate "
+				+ "FROM score AS sc "
+				+ "GROUP BY sc.subject "
+				+ "ORDER BY sc.subject";
+		System.out.println(sql);
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String subject = rs.getString("subject");
+					int pass = rs.getInt("pass");
+					int fail = rs.getInt("fail");
+					double passRate = rs.getDouble("pass_rate");
+					System.out.println("教科=" + subject + ", 合格=" + pass + "、不合格＝" + fail + "、合格率＝" + passRate);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("合格率の取得に失敗しました", e);
+		}
+		
+	}
+ 	
 	void checkEligibility() {
 		String sql = "SELECT st.name, st.age, "
 				+ "CASE "
