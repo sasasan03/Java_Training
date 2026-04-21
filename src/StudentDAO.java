@@ -19,12 +19,55 @@ import java.util.List;
 // RANK・・・同じ順位・次の順位を飛ばす（1・1・3）
 // ROW_NUMBER()・・・必ず連番・同点でも別の番号（1・2・3）
 // [CASE] WHEN THEN ELSE [END]
-// LAG・・・
+// LAG・・・前の行の値を取得する
+// デバッグ用・・・System.out.println(sql);これをTableplusなどに貼り付ける
 
 public class StudentDAO {
 	private static final String URL = "jdbc:postgresql://localhost:5432/training";
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
+	
+	void studentRanking() {
+		String sql = "SELECT st.name, "
+				+ "AVG(sc.point) AS point_avg, "
+				+ "SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) AS pass, "
+				+ "CASE "
+				+ " WHEN AVG(sc.point) >= 80 AND SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) = 3 THEN 'S' "
+				+ " WHEN AVG(sc.point) >= 70 AND SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) >= 2 THEN 'A' "
+				+ " WHEN AVG(sc.point) >= 60 THEN 'B' "
+				+ "ELSE 'C' END AS score_rank "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st "
+				+ "ON sc.student_id = st.id "
+				+ "GROUP BY st.name "
+				+ "ORDER BY "
+				+ " CASE "
+				+ "  WHEN AVG(sc.point) >= 80 AND SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) = 3 THEN 1 "
+				+ "  WHEN AVG(sc.point) >= 70 AND SUM(CASE WHEN sc.point >= 70 THEN 1 ELSE 0 END) >= 2 THEN 2 "
+				+ "  WHEN AVG(sc.point) >= 60 THEN 3 "
+				+ "  ELSE 4 "
+				+ "END ";
+		System.out.println(sql);
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					double avg = Math.round(rs.getDouble("point_avg") * 10.0) / 10.0;
+					int pass = rs.getInt("pass");
+					String rank = rs.getString("score_rank");
+					System.out.println("名前=" + name + ", 平均=" + avg + "、合格科目＝" + pass + "、 rank＝" + rank);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("総合スコアランクの取得に失敗しました", e);
+		}
+	}
 	
 	void passFailBySubject() {
 		String sql = "SELECT sc.subject, "
@@ -34,7 +77,6 @@ public class StudentDAO {
 				+ "FROM score AS sc "
 				+ "GROUP BY sc.subject "
 				+ "ORDER BY sc.subject";
-		System.out.println(sql);
 		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 				PreparedStatement ps = conn.prepareStatement(sql);) {
 			try (ResultSet rs = ps.executeQuery();) {
@@ -44,7 +86,7 @@ public class StudentDAO {
 					String subject = rs.getString("subject");
 					int pass = rs.getInt("pass");
 					int fail = rs.getInt("fail");
-					double passRate = rs.getDouble("pass_rate");
+					double passRate = Math.round(rs.getDouble("pass_rate") * 10.0) / 10.0;
 					System.out.println("教科=" + subject + ", 合格=" + pass + "、不合格＝" + fail + "、合格率＝" + passRate);
 				}
 				if (!found) {
@@ -54,7 +96,6 @@ public class StudentDAO {
 		} catch (SQLException e) {
 			throw new AppException("合格率の取得に失敗しました", e);
 		}
-		
 	}
  	
 	void checkEligibility() {
