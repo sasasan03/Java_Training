@@ -26,13 +26,82 @@ public class StudentDAO {
 	private static final String USER = "student";
 	private static final String PASSWORD = "password";
 	
+	void scoreTrend() {
+		String sql = "SELECT st.name, "
+				+ "MAX(sc.point) AS max_point, "
+				+ "MIN(sc.point) AS min_point, "
+				+ "MAX(sc.point) - MIN(sc.point) AS diff, "
+				+ "CASE "
+				+ " WHEN MAX(sc.point) - MIN(sc.point) >= 30 THEN '得意不得意あり' "
+				+ " WHEN MAX(sc.point) - MIN(sc.point) >= 20 THEN 'やや差あり' "
+				+ " ELSE '安定型' "
+				+ "END AS evaluation "
+				+ "FROM score AS sc "
+				+ "INNER JOIN student AS st ON sc.student_id = st.id "
+				+ "GROUP BY st.name "
+				+ "ORDER BY MAX(sc.point) - MIN(sc.point) DESC";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String name = rs.getString("name");
+					int maxPoint = rs.getInt("max_point");
+					int minPoint = rs.getInt("min_point");
+					int diff = rs.getInt("diff");
+					String evaluation = rs.getString("evaluation");
+					System.out.println("名前=" + name + ", 最高=" + maxPoint + "、最低＝" + minPoint + "、分類＝" + diff + "、評価" + evaluation);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("テストの最高値と最低値との差分評価を取得できませんでした", e);
+		}
+	}
+	
+	void countByAgeGroup() {
+		String sql = "SELECT age_range, "
+				+ "COUNT(name) AS count "
+				+ "  FROM ("
+				+ "   SELECT st.name, "
+				+ "    CASE "
+				+ "      WHEN st.age < 20 THEN '10代' "
+				+ "      WHEN st.age < 30 THEN '20代' "
+				+ "  	 WHEN st.age < 40 THEN '30代' "
+				+ "    	 ELSE '40代' "
+				+ " 	END AS age_range "
+				+ "	   FROM student st "
+				+ "   ) sub "
+				+ "GROUP BY age_range";
+		try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				PreparedStatement ps = conn.prepareStatement(sql);) {
+			try (ResultSet rs = ps.executeQuery();) {
+				boolean found = false;
+				while (rs.next()) {
+					found = true;
+					String ageRange = rs.getString("age_range");
+					int count = rs.getInt("count");
+					System.out.println("年齢層=" + ageRange + ", 人数=" + count);
+				}
+				if (!found) {
+					System.out.println("該当なし");
+				}
+			}
+		} catch (SQLException e) {
+			throw new AppException("年齢層のデータを取得できませんでした", e);
+		}
+	}
+ 	
 	void scoreWithMessage() {
 		String sql = "SELECT st.name, sc.point, "
 				+ "CASE "
 				+ " WHEN sc.point >= 90 THEN 'よくできました' "
 				+ " WHEN sc.point >= 75 THEN 'がんばりました' "
 				+ " WHEN sc.point >= 60 THEN 'もうすこし' "
-				+ "ELSE '要復習' END evaluation "
+				+ "ELSE '要復習' END AS evaluation "
 				+ "FROM score AS sc "
 				+ "INNER JOIN student AS st ON sc.student_id = st.id "
 				+ "ORDER BY st.id";
